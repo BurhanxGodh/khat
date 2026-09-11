@@ -1,0 +1,91 @@
+import { useEffect, useState } from 'react';
+import type { Role } from '@/data/types';
+import { roleDefaultPage } from '@/data/mock';
+import { useHash, Header, navigate } from '@/components/ui';
+import { Gallery } from '@/pages/public';
+import { LandingRoleSelect, Auth, ForcedPasswordChange } from '@/pages/auth';
+import {
+  StudentLandingPage, StudentDashboard, Catalog, LevelPage, CheckpointPage, Profile,
+  ShowcaseSubmission, Competitions, StudentEvents, Resources, Notifications,
+} from '@/pages/student';
+import {
+  TeacherQueue, ReviewPage, Reviews, TeacherShowcase, AssetLibrary,
+  TeacherProfile, CompetitionJudging, HostEvent, BranchStats, BranchTeachers,
+  TeacherNotifications,
+} from '@/pages/teacher';
+import { AdminLayout } from '@/pages/admin';
+
+function App() {
+  const page = useHash();
+  const [role, setRole] = useState<Role>(() => {
+    if (page.startsWith('admin')) return 'admin';
+    if (page.startsWith('queue') || page.startsWith('review') || page === 'reviews' || page === 'assets' || page === 'judging' || page === 'events-host' || page === 'branch-stats' || page === 'branch-teachers') return 'teacher';
+    if (['landing', 'signup', 'login', 'forced-password'].includes(page)) return 'student';
+    return 'student';
+  });
+
+  useEffect(() => {
+    if (page.startsWith('admin')) setRole('admin');
+  }, [page]);
+
+  const content = (() => {
+    // Landing / role selection
+    if (page === 'landing') return <LandingRoleSelect />;
+
+    // Auth pages
+    if (page === 'signup') return <Auth signup />;
+    if (page === 'login') return <Auth />;
+    if (page === 'forced-password') return <ForcedPasswordChange />;
+
+    // Student landing (introductory + showcases)
+    if (page === 'student-landing') return <StudentLandingPage />;
+
+    // Student portal
+    if (page === 'dashboard' || page === 'student') return <StudentDashboard />;
+    if (page === 'catalog') return <Catalog />;
+    if (page === 'level') return <LevelPage />;
+    if (page === 'checkpoint') return <CheckpointPage />;
+    if (page === 'profile' && role === 'student') return <Profile />;
+    if (page === 'student-profile') return <Profile />;
+    if (page === 'showcase' && role === 'student') return <ShowcaseSubmission />;
+    if (page === 'competitions' && role === 'student') return <Competitions />;
+    if (page === 'events' && role === 'student') return <StudentEvents />;
+    if (page === 'resources' && role === 'student') return <Resources />;
+    if (page === 'notifications' && role === 'student') return <Notifications />;
+
+    // Gallery (shared)
+    if (page === 'gallery') return <Gallery />;
+
+    // Teacher portal
+    if (page === 'queue') return <TeacherQueue coordinator={role === 'coordinator'} />;
+    if (page === 'review') return <ReviewPage />;
+    if (page === 'reviews') return <Reviews />;
+    if (page === 'showcase' && (role === 'teacher' || role === 'coordinator')) return <TeacherShowcase />;
+    if (page === 'assets') return <AssetLibrary />;
+    if (page === 'judging') return <CompetitionJudging />;
+    if (page === 'events-host') return <HostEvent />;
+    if (page === 'profile' && (role === 'teacher' || role === 'coordinator')) return <TeacherProfile />;
+    if (page === 'notifications' && (role === 'teacher' || role === 'coordinator')) return <TeacherNotifications />;
+
+    // Coordinator extra tabs
+    if (page === 'branch-stats') return <BranchStats />;
+    if (page === 'branch-teachers') return <BranchTeachers />;
+
+    // Admin portal
+    if (page === 'admin' || page.startsWith('admin-')) return <AdminLayout page={page} />;
+
+    return <LandingRoleSelect />;
+  })();
+
+  if (role === 'admin' && (page === 'admin' || page.startsWith('admin-'))) return <>{content}</>;
+  if (page === 'landing' || page === 'signup' || page === 'login' || page === 'forced-password' || page === 'student-landing') return <>{content}</>;
+
+  return (
+    <>
+      <Header role={role} setRole={(next) => { setRole(next); navigate(roleDefaultPage[next]); }} />
+      {content}
+    </>
+  );
+}
+
+export default App;
