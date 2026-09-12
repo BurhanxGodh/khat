@@ -157,8 +157,8 @@ export const reviewHistory = [
 ] as const;
 
 export const roleDefaultPage: Record<Role, string> = {
-  student: 'student-landing',
-  teacher: 'queue',
-  coordinator: 'queue',
+  student: 'dashboard',
+  teacher: 'teacher-dashboard',
+  coordinator: 'coordinator-dashboard',
   admin: 'admin',
 };

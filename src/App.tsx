@@ -3,13 +3,13 @@ import type { Role } from '@/data/types';
 import { roleDefaultPage } from '@/data/mock';
 import { useHash, Header, navigate } from '@/components/ui';
 import { Gallery } from '@/pages/public';
-import { LandingRoleSelect, Auth, ForcedPasswordChange } from '@/pages/auth';
+import { LandingRoleSelect, Auth, ForcedPasswordChange, SettingsPage } from '@/pages/auth';
 import {
   StudentLandingPage, StudentDashboard, Catalog, LevelPage, CheckpointPage, Profile,
   ShowcaseSubmission, Competitions, StudentEvents, Resources, Notifications,
 } from '@/pages/student';
 import {
-  TeacherQueue, ReviewPage, Reviews, TeacherShowcase, AssetLibrary,
+  TeacherDashboard, CoordinatorDashboard, TeacherQueue, ReviewPage, Reviews, TeacherShowcase, AssetLibrary,
   TeacherProfile, CompetitionJudging, HostEvent, BranchStats, BranchTeachers,
   TeacherNotifications,
 } from '@/pages/teacher';
@@ -26,6 +26,10 @@ function App() {
 
   useEffect(() => {
     if (page.startsWith('admin')) setRole('admin');
+    else if (page.startsWith('coordinator-') || ['branch-stats', 'branch-teachers'].includes(page)) setRole('coordinator');
+    else if (page.startsWith('teacher-') || ['queue', 'review', 'reviews', 'assets', 'judging', 'events-host'].includes(page)) setRole('teacher');
+    else if (page.startsWith('login-')) setRole(page.replace('login-', '') as Role);
+    else if (page === 'dashboard' || page === 'student' || page === 'student-landing') setRole('student');
   }, [page]);
 
   const content = (() => {
@@ -33,9 +37,10 @@ function App() {
     if (page === 'landing') return <LandingRoleSelect />;
 
     // Auth pages
-    if (page === 'signup') return <Auth signup />;
-    if (page === 'login') return <Auth />;
+    if (page === 'signup') return <Auth signup initialRole="student" />;
+    if (page === 'login' || page.startsWith('login-')) return <Auth initialRole={page.startsWith('login-') ? page.replace('login-', '') as Role : role} />;
     if (page === 'forced-password') return <ForcedPasswordChange />;
+    if (page === 'settings') return <SettingsPage role={role} />;
 
     // Student landing (introductory + showcases)
     if (page === 'student-landing') return <StudentLandingPage />;
@@ -56,7 +61,9 @@ function App() {
     // Gallery (shared)
     if (page === 'gallery') return <Gallery />;
 
-    // Teacher portal
+    // Teacher and coordinator portals
+    if (page === 'teacher-dashboard') return <TeacherDashboard />;
+    if (page === 'coordinator-dashboard') return <CoordinatorDashboard />;
     if (page === 'queue') return <TeacherQueue coordinator={role === 'coordinator'} />;
     if (page === 'review') return <ReviewPage />;
     if (page === 'reviews') return <Reviews />;
@@ -78,7 +85,7 @@ function App() {
   })();
 
   if (role === 'admin' && (page === 'admin' || page.startsWith('admin-'))) return <>{content}</>;
-  if (page === 'landing' || page === 'signup' || page === 'login' || page === 'forced-password' || page === 'student-landing') return <>{content}</>;
+  if (page === 'landing' || page === 'signup' || page === 'login' || page.startsWith('login-') || page === 'forced-password' || page === 'settings') return <>{content}</>;
 
   return (
     <>

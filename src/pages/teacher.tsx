@@ -14,6 +14,24 @@ import {
   ScriptTabs, UploadBox, BackLink, ShowcaseSections,
 } from '@/components/ui';
 
+export function TeacherDashboard() {
+  return (
+    <main className="page portal-page">
+      <div className="portal-welcome">
+        <div><p className="eyebrow">Faculty workspace · Tuesday, 10 September 2026</p><h1>Good morning, Ismail.</h1><p>Your teaching desk is ready. Review work, follow your students, and keep the hand moving.</p></div>
+        <div className="queue-count"><strong>4</strong><span>entries to review</span></div>
+      </div>
+      <div className="stats-grid"><StatCard icon={ClipboardList} value="47" label="Reviewed this month" trend="92% within SLA" /><StatCard icon={Users} value="23" label="Active students" /><StatCard icon={Zap} value="28 hrs" label="Average response" /></div>
+      <div className="admin-dashboard-grid"><div className="chart-card"><SectionHeading title="Today’s queue" text="The entries closest to their response deadline." action={<button className="text-link" onClick={() => navigate('queue')}>Open queue <ArrowRight size={14} /></button>} />{reviewQueue.slice(0, 3).map(row => <div className="dashboard-list-row" key={row.id}><div><strong>{row.student}</strong><small>{row.level} · {row.branch}</small></div><StatusChip tone="amber">{row.hours}</StatusChip></div>)}</div><div className="chart-card"><SectionHeading title="Your teaching rhythm" text="Reviews completed over the last twelve weeks." /><ActivityHeatmap /></div></div>
+      <ShowcaseSections works={galleryWorks} />
+    </main>
+  );
+}
+
+export function CoordinatorDashboard() {
+  return <BranchStats />;
+}
+
 export function TeacherQueue({ coordinator = false }: { coordinator?: boolean }) {
   const [filter, setFilter] = useState<Script | 'All'>('All');
   const [source, setSource] = useState<'All sources' | 'Checkpoint' | 'Event' | 'Competition'>('All sources');

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
-  ArrowRight, Award, ChevronRight, Flame, Heart, Lock, MoreHorizontal,
-  Play, Upload, X,
+  ArrowRight, Award, ChevronRight, Flame, Heart, Lock, LogOut, MoreHorizontal,
+  Play, Settings, Upload, X,
 } from 'lucide-react';
 import type { Script, Role } from '@/data/types';
 import { khatTypes, scriptList, roleDefaultPage, branches, type GalleryWork } from '@/data/mock';
@@ -40,9 +40,9 @@ export function Logo({ admin = false }: { admin?: boolean }) {
 
 export function Header({ role, setRole }: { role: Role; setRole: (r: Role) => void }) {
   const links: Record<Role, [string, string][]> = {
-    student: [['dashboard', 'Your Path'], ['catalog', 'Courses'], ['gallery', 'Gallery'], ['competitions', 'Competitions'], ['events', 'Events'], ['resources', 'Resources'], ['profile', 'Profile'], ['notifications', 'Alerts']],
-    teacher: [['queue', 'Review Queue'], ['reviews', 'My Reviews'], ['showcase', 'Showcase'], ['assets', 'Asset Library'], ['judging', 'Judging'], ['events-host', 'Host Event'], ['profile', 'Profile'], ['notifications', 'Alerts']],
-    coordinator: [['queue', 'Review Queue'], ['reviews', 'My Reviews'], ['branch-stats', 'Branch Stats'], ['branch-teachers', 'Branch Teachers'], ['showcase', 'Showcase'], ['assets', 'Asset Library'], ['profile', 'Profile'], ['notifications', 'Alerts']],
+    student: [['dashboard', 'Dashboard'], ['catalog', 'Courses'], ['gallery', 'Gallery'], ['competitions', 'Competitions'], ['events', 'Events'], ['resources', 'Resources'], ['profile', 'Profile'], ['notifications', 'Alerts']],
+    teacher: [['teacher-dashboard', 'Dashboard'], ['queue', 'Review Queue'], ['reviews', 'My Reviews'], ['showcase', 'Showcase'], ['assets', 'Asset Library'], ['judging', 'Judging'], ['events-host', 'Host Event'], ['profile', 'Profile'], ['notifications', 'Alerts']],
+    coordinator: [['coordinator-dashboard', 'Dashboard'], ['queue', 'Review Queue'], ['reviews', 'My Reviews'], ['branch-stats', 'Branch Stats'], ['branch-teachers', 'Branch Teachers'], ['showcase', 'Showcase'], ['assets', 'Asset Library'], ['profile', 'Profile'], ['notifications', 'Alerts']],
     admin: [['admin', 'Overview'], ['admin-courses', 'Course Builder'], ['admin-users', 'Teacher & Load'], ['admin-logs', 'Entry Logs'], ['admin-showcase', 'Showcase Mod'], ['admin-competitions', 'Competitions'], ['admin-events', 'Events'], ['admin-resources', 'Resources'], ['admin-stats', 'Statistics'], ['admin-governance', 'Certificates & Data']],
   };
   const nav = links[role];
@@ -62,6 +62,8 @@ export function Header({ role, setRole }: { role: Role; setRole: (r: Role) => vo
             <option value="admin">Admin</option>
           </select>
         </label>
+        <button className="header-icon-button" onClick={() => navigate('settings')} aria-label="Settings"><Settings size={17} /></button>
+        <button className="header-icon-button" onClick={() => navigate('landing')} aria-label="Log out"><LogOut size={17} /></button>
         <button className="avatar" onClick={() => navigate('profile')}>{role === 'admin' ? 'AD' : role === 'student' ? 'AS' : 'IZ'}</button>
       </div>
     </header>

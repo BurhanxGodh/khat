@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, Check, Lock, ChevronRight } from 'lucide-react';
+import { ArrowRight, Check, ChevronRight, Lock, LogIn, Settings, UserRound } from 'lucide-react';
 import { branches, approvedTRs } from '@/data/mock';
 import { navigate, Button, Logo } from '@/components/ui';
 import type { Role } from '@/data/types';
@@ -14,44 +14,44 @@ const roleCards: { role: Role; label: string; desc: string; icon: string }[] = [
 
 export function LandingRoleSelect() {
   return (
-    <main className="landing-page">
-      <div className="landing-bg">
-        <div className="landing-arabic-bg">خط</div>
-      </div>
-      <div className="landing-content">
-        <Logo />
-        <p className="eyebrow" style={{ marginTop: 28 }}>Welcome</p>
-        <h1>Choose your path to begin.</h1>
-        <p className="landing-lede">Al-Jamea-tus-Saifiyah Calligraphy Studio. Select your role below — students can create a new account; faculty, coordinators, and admins sign in with pre-created credentials.</p>
+    <main className="landing-page reference-landing">
+      <div className="landing-photo" role="img" aria-label="Al-Jamea-tus-Saifiyah campus architecture" />
+      <section className="landing-panel">
+        <div className="landing-panel-brand">
+          <span className="landing-seal">خط</span>
+          <Logo />
+        </div>
+        <p className="landing-panel-kicker">Calligraphy Studio</p>
+        <h1>Welcome to your learning path.</h1>
+        <p className="landing-panel-copy">Choose your place in the guild to continue.</p>
         <div className="role-card-grid">
           {roleCards.map(card => (
-            <button key={card.role} className="role-card" onClick={() => navigate(card.role === 'student' ? 'signup' : 'login')}>
-              <span className="role-card-icon">{card.icon}</span>
-              <div>
-                <strong>{card.label}</strong>
-                <p>{card.desc}</p>
-              </div>
-              <ChevronRight size={18} />
+            <button key={card.role} className="reference-role-card" onClick={() => navigate(`login-${card.role}`)}>
+              <span className="reference-role-icon">{card.icon}</span>
+              <span className="reference-role-label">{card.label}</span>
+              <ChevronRight size={16} />
             </button>
           ))}
         </div>
-      </div>
+        <p className="landing-panel-note"><LogIn size={14} /> Every role begins with sign in. Students can create an account from the login page.</p>
+      </section>
     </main>
   );
 }
 
-export function Auth({ signup = false }: { signup?: boolean }) {
+export function Auth({ signup = false, initialRole = 'student' }: { signup?: boolean; initialRole?: Role }) {
   const [tr, setTr] = useState('');
   const [error, setError] = useState(false);
   const [photoName, setPhotoName] = useState<string | null>(null);
-  const [role, setRole] = useState<Role>('student');
+  const [role, setRole] = useState<Role>(initialRole);
 
   const validateAndGo = (value: string) => {
     if (signup && !approvedTRs.includes(value.toUpperCase())) {
       setError(true);
       return;
     }
-    navigate(role === 'student' ? 'student-landing' : role === 'admin' ? 'admin' : 'queue');
+    if (signup) { navigate('student-landing'); return; }
+    navigate(role === 'admin' ? 'admin' : role === 'teacher' ? 'teacher-dashboard' : role === 'coordinator' ? 'coordinator-dashboard' : 'dashboard');
   };
 
   return (
@@ -67,6 +67,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
       </div>
       <div className="auth-form">
         <div className="auth-form-inner">
+          <p className="eyebrow"><UserRound size={13} /> {signup ? 'Create student account' : `${roleCards.find(card => card.role === role)?.label ?? 'Account'} sign in`}</p>
           {!signup && (
             <label className="field-label">I am a...
               <select className="field" value={role} onChange={e => setRole(e.target.value as Role)}>
@@ -108,11 +109,11 @@ export function Auth({ signup = false }: { signup?: boolean }) {
           </Button>
           <p className="auth-switch">
             {signup ? 'Already have an account?' : 'New student?'}{' '}
-            <button onClick={() => navigate(signup ? 'login' : 'signup')}>
-              {signup ? 'Sign in' : 'Create an account'}
+            <button onClick={() => navigate(signup ? 'login-student' : 'signup')}>
+              {signup ? 'Sign in' : 'Create student account'}
             </button>
           </p>
-          {!signup && <p className="auth-note"><Lock size={13} /> Faculty, coordinators, and admins: use the temporary password provided by your administrator. You'll be asked to change it on first login.</p>}
+          {!signup && <p className="auth-note"><Lock size={13} /> Faculty, coordinators, and admins use credentials provided by the administrator. Students can create an account below.</p>}
         </div>
       </div>
     </main>
@@ -143,6 +144,23 @@ export function ForcedPasswordChange() {
           <Button onClick={() => setDone(true)}>{done ? 'Password changed' : 'Set new password'} {done && <Check size={16} />}</Button>
           {done && <p className="auth-switch">Password updated. <button onClick={() => navigate('queue')}>Continue to portal →</button></p>}
         </div>
+      </div>
+    </main>
+  );
+}
+
+
+export function SettingsPage({ role }: { role: Role }) {
+  const label = role === 'teacher' ? 'Faculty' : role[0].toUpperCase() + role.slice(1);
+  return (
+    <main className="page settings-page">
+      <div className="settings-card">
+        <p className="eyebrow"><Settings size={13} /> Account settings</p>
+        <h1>{label} settings</h1>
+        <p>Manage your account preferences and access controls from one place.</p>
+        <div className="settings-row"><div><strong>Account role</strong><small>{label} workspace</small></div><span className="chip chip-blue">Active</span></div>
+        <div className="settings-row"><div><strong>Password</strong><small>Update your sign-in password</small></div><button className="text-link">Change password <ArrowRight size={14} /></button></div>
+        <div className="settings-actions"><Button outline onClick={() => navigate('landing')}>Log out</Button><Button onClick={() => navigate(role === 'admin' ? 'admin' : role === 'teacher' ? 'teacher-dashboard' : role === 'coordinator' ? 'coordinator-dashboard' : 'dashboard')}>Back to dashboard <ArrowRight size={15} /></Button></div>
       </div>
     </main>
   );

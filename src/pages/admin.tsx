@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   ArrowRight, Award, BarChart3, BookOpen, CalendarDays, Check, ChevronRight,
-  ClipboardList, FileText, LayoutDashboard, Lock, Menu, Play, Plus, Search,
+  ClipboardList, FileText, LayoutDashboard, Lock, LogOut, Menu, Play, Plus, Search,
   Settings, ShieldCheck, Sparkles, Trash2, Trophy, Upload, Users, X,
 } from 'lucide-react';
 import type { Script } from '@/data/types';
@@ -36,7 +36,8 @@ export function AdminLayout({ page }: { page: string }) {
           <button className={page === href ? 'active' : ''} onClick={() => navigate(href)} key={href}><Icon size={17} />{label}</button>
         ))}
         <div className="admin-side-bottom">
-          <button><Settings size={17} />Settings</button>
+          <button onClick={() => navigate('settings')}><Settings size={17} />Settings</button>
+          <button onClick={() => navigate('landing')}><LogOut size={17} />Log out</button>
           <small>Admin preview<br />Control panel</small>
         </div>
       </aside>
