@@ -2,27 +2,42 @@ import { useState } from 'react';
 import {
   ArrowRight, Award, Bell, CalendarDays, Check, ChevronRight, ClipboardList,
   FileImage, FileText, Lock, Play, Search, ShieldCheck, Sparkles, Trophy,
-  Upload, Users, Zap,
+  Upload, Users, Zap, AlertTriangle, Eye, Clock,
 } from 'lucide-react';
 import type { Script } from '@/data/types';
 import {
   khatTypes, scriptList, reviewQueue, reviewHistory, galleryWorks,
-  assets, teacherNotifications, branches, teachers, liveEvents,
+  assets, teacherNotifications, branches, teachers, liveEvents, students,
 } from '@/data/mock';
 import {
   navigate, Button, SectionHeading, StatusChip, StatCard, ActivityHeatmap,
-  ScriptTabs, UploadBox, BackLink, ShowcaseSections,
+  ScriptTabs, UploadBox, BackLink, ShowcaseSections, BadgeIcon,
 } from '@/components/ui';
 
+const currentTeacher = teachers[0];
+
 export function TeacherDashboard() {
+  const myEntries = reviewQueue.filter(e => currentTeacher.assignedScripts.includes(e.script));
   return (
     <main className="page portal-page">
       <div className="portal-welcome">
-        <div><p className="eyebrow">Faculty workspace · Tuesday, 10 September 2026</p><h1>Good morning, Ismail.</h1><p>Your teaching desk is ready. Review work, follow your students, and keep the hand moving.</p></div>
-        <div className="queue-count"><strong>4</strong><span>entries to review</span></div>
+        <div><p className="eyebrow">Faculty workspace · Saturday, 13 September 2026</p><h1>Good morning, Ismail.</h1><p>Your teaching desk is ready. Review work, follow your students, and keep the hand moving.</p></div>
+        <div className="queue-count"><strong>{myEntries.length}</strong><span>entries to review</span></div>
       </div>
       <div className="stats-grid"><StatCard icon={ClipboardList} value="47" label="Reviewed this month" trend="92% within SLA" /><StatCard icon={Users} value="23" label="Active students" /><StatCard icon={Zap} value="28 hrs" label="Average response" /></div>
-      <div className="admin-dashboard-grid"><div className="chart-card"><SectionHeading title="Today’s queue" text="The entries closest to their response deadline." action={<button className="text-link" onClick={() => navigate('queue')}>Open queue <ArrowRight size={14} /></button>} />{reviewQueue.slice(0, 3).map(row => <div className="dashboard-list-row" key={row.id}><div><strong>{row.student}</strong><small>{row.level} · {row.branch}</small></div><StatusChip tone="amber">{row.hours}</StatusChip></div>)}</div><div className="chart-card"><SectionHeading title="Your teaching rhythm" text="Reviews completed over the last twelve weeks." /><ActivityHeatmap /></div></div>
+      <div className="info-banner"><Check size={16} /><span>You are assigned to review: {currentTeacher.assignedScripts.map(s => khatTypes[s].name).join(', ')}. You will only see entries matching these scripts in your queue.</span></div>
+      <div className="admin-dashboard-grid">
+        <div className="chart-card">
+          <SectionHeading title="Today's queue" text="The entries closest to their response deadline — filtered to your assigned scripts." action={<button className="text-link" onClick={() => navigate('queue')}>Open queue <ArrowRight size={14} /></button>} />
+          {myEntries.slice(0, 3).map(row => (
+            <div className="dashboard-list-row" key={row.id}>
+              <div><strong>{row.student}</strong><small>{row.level} · {row.branch}</small></div>
+              <StatusChip tone={row.idleFlagged ? 'red' : 'amber'}>{row.idleFlagged ? 'Idle-flagged' : row.hours}</StatusChip>
+            </div>
+          ))}
+        </div>
+        <div className="chart-card"><SectionHeading title="Your teaching rhythm" text="Reviews completed over the last twelve weeks." /><ActivityHeatmap /></div>
+      </div>
       <ShowcaseSections works={galleryWorks} />
     </main>
   );
@@ -35,7 +50,9 @@ export function CoordinatorDashboard() {
 export function TeacherQueue({ coordinator = false }: { coordinator?: boolean }) {
   const [filter, setFilter] = useState<Script | 'All'>('All');
   const [source, setSource] = useState<'All sources' | 'Checkpoint' | 'Event' | 'Competition'>('All sources');
-  let rows = filter === 'All' ? reviewQueue : reviewQueue.filter(r => r.script === filter);
+  const assignedScripts = coordinator ? scriptList : currentTeacher.assignedScripts;
+  let rows = reviewQueue.filter(e => assignedScripts.includes(e.script));
+  if (filter !== 'All') rows = rows.filter(r => r.script === filter);
   if (source !== 'All sources') rows = rows.filter(r => r.source === source);
   return (
     <main className="page portal-page">
@@ -43,13 +60,16 @@ export function TeacherQueue({ coordinator = false }: { coordinator?: boolean })
         <div>
           <p className="eyebrow">Teacher portal {coordinator && '· Branch coordinator'}</p>
           <h1>Review Queue</h1>
-          <p>Submissions assigned to you, ordered by how soon they're due.</p>
+          <p>Submissions assigned to you, ordered by how soon they're due. Only entries matching your assigned khat type(s) appear here.</p>
         </div>
         <div className="queue-count"><strong>{rows.length}</strong><span>awaiting review</span></div>
       </div>
+      {!coordinator && (
+        <div className="info-banner"><Check size={16} /><span>Your assigned scripts: {currentTeacher.assignedScripts.map(s => khatTypes[s].name).join(', ')}. Entries from other scripts are routed to their assigned teachers.</span></div>
+      )}
       <div className="tabs">
         <button className={filter === 'All' ? 'active' : ''} onClick={() => setFilter('All')}>All</button>
-        {scriptList.map(item => <button key={item} className={filter === item ? 'active' : ''} onClick={() => setFilter(item)}>{khatTypes[item].name}</button>)}
+        {scriptList.filter(s => assignedScripts.includes(s)).map(item => <button key={item} className={filter === item ? 'active' : ''} onClick={() => setFilter(item)}>{khatTypes[item].name}</button>)}
       </div>
       <div className="filter-bar">
         <span>Source type</span>
@@ -57,21 +77,31 @@ export function TeacherQueue({ coordinator = false }: { coordinator?: boolean })
           <button key={s} className={source === s ? 'active-filter' : ''} onClick={() => setSource(s)}>{s}</button>
         ))}
       </div>
-      <div className="entry-table">
-        <div className="table-head">
-          <span>Student</span><span>Script</span><span>Level / exercise</span><span>Branch</span><span>Time remaining</span><span />
-        </div>
-        {rows.map((row, i) => (
-          <div className="entry-row" key={row.id}>
-            <div><strong>{row.student}</strong><small>Submitted 4 hours ago · {row.source}</small></div>
-            <span style={{ color: khatTypes[row.script].color }}>{khatTypes[row.script].name}</span>
-            <span>{row.level}</span>
-            <span>{row.branch}</span>
-            <StatusChip tone={i === 2 ? 'red' : i === 1 ? 'amber' : 'green'}>{row.hours}</StatusChip>
-            <Button onClick={() => navigate('review')}>{row.lockedByYou ? 'Locked by you' : 'Open'} <ArrowRight size={14} /></Button>
+      {rows.length === 0 ? (
+        <div className="empty-state"><Check size={28} /><h3>No entries in this filter</h3><p>No entries match your assigned scripts and the current filter.</p></div>
+      ) : (
+        <div className="entry-table">
+          <div className="table-head">
+            <span>Student</span><span>Script</span><span>Level / exercise</span><span>Branch</span><span>Time remaining</span><span />
           </div>
-        ))}
-      </div>
+          {rows.map((row, i) => (
+            <div className="entry-row" key={row.id}>
+              <div><strong>{row.student}</strong><small>Submitted 4 hours ago · {row.source}</small></div>
+              <span style={{ color: khatTypes[row.script].color }}>{khatTypes[row.script].name}</span>
+              <span>{row.level}</span>
+              <span>{row.branch}</span>
+              {row.idleFlagged ? (
+                <StatusChip tone="red"><AlertTriangle size={13} /> Idle-flagged</StatusChip>
+              ) : row.lockedByYou ? (
+                <StatusChip tone="blue"><Lock size={13} /> Locked by you</StatusChip>
+              ) : (
+                <StatusChip tone={i === 2 ? 'red' : i === 1 ? 'amber' : 'green'}>{row.hours}</StatusChip>
+              )}
+              <Button onClick={() => navigate('review')}>{row.lockedByYou ? 'Continue review' : 'Open'} <ArrowRight size={14} /></Button>
+            </div>
+          ))}
+        </div>
+      )}
       <ShowcaseSections works={galleryWorks} />
     </main>
   );
@@ -87,10 +117,11 @@ export function ReviewPage() {
           <p className="eyebrow">Scoped review · only this checkpoint's uploads are visible</p>
           <h1>Amina Suleiman</h1>
           <p>Naskh · Murakkabāt, exercise 4 · Nairobi</p>
-          <button className="text-link" onClick={() => navigate('student-profile')} style={{ marginTop: 8 }}>View full student profile <ArrowRight size={14} /></button>
+          <button className="text-link" onClick={() => navigate('student-profile')} style={{ marginTop: 8 }}>View practice history & activity <ArrowRight size={14} /></button>
         </div>
-        <StatusChip tone="amber"><Lock size={13} /> You are reviewing this — it won't be reassigned while open</StatusChip>
+        <StatusChip tone="blue"><Lock size={13} /> Locked by you — won't be reassigned while open</StatusChip>
       </div>
+      <div className="info-banner"><Eye size={16} /><span>You are reviewing a checkpoint test. You see ONLY the uploads from the level range this checkpoint covers (Levels 1–5). Uploads from other courses or khat types are not shown here.</span></div>
       <div className="review-grid">
         <div>
           <div className="sheet-preview"><span>بت</span></div>
@@ -104,12 +135,18 @@ export function ReviewPage() {
             <li>Even proportion against the 5-dot alif</li>
           </ul>
           <label className="field-label">Feedback<textarea className="field textarea" placeholder="Write feedback here..." /></label>
-          <UploadBox label="Upload annotated sheet" sublabel="Optional correction photo for the student's reference" icon={FileImage} />
+          <UploadBox label="Upload annotated sheet" sublabel="For the student's own reference only — NOT shown to any teacher reviewing a redo attempt" icon={FileImage} />
           <div className="review-actions">
             <Button onClick={() => setDecision('Passed')}>Pass <Check size={15} /></Button>
-            <Button outline onClick={() => setDecision('Needs revision')}>Needs revision</Button>
+            <Button outline onClick={() => setDecision('Needs redo')}>Needs redo</Button>
           </div>
-          {decision && <StatusChip tone={decision === 'Passed' ? 'green' : 'red'}>{decision} · student notified · {decision === 'Passed' ? 'award JHS merit points on Jamea website' : 'redo will be a fresh entry'}</StatusChip>}
+          {decision && (
+            <div className="review-result">
+              <StatusChip tone={decision === 'Passed' ? 'green' : 'red'}>{decision} · student notified</StatusChip>
+              {decision === 'Passed' && <p>Award JHS merit points on Jamea website. Next levels are now unlocked for this student.</p>}
+              {decision === 'Needs redo' && <p>The student will re-attempt with the same letters and text, submitted as a brand-new entry. It will go through normal routing and may land with a different teacher. Your annotated sheet is for the student's reference only — it will NOT be shown to whoever reviews the redo.</p>}
+            </div>
+          )}
         </aside>
       </div>
     </main>
@@ -169,7 +206,7 @@ export function AssetLibrary() {
   if (search) filtered = filtered.filter(a => a.title.toLowerCase().includes(search.toLowerCase()) || a.tags.some(t => t.includes(search.toLowerCase())));
   return (
     <main className="page portal-page">
-      <SectionHeading eyebrow="Shared resources" title="Asset Library" text="Upload your own khat pieces. Search across all teachers' uploads." />
+      <SectionHeading eyebrow="Shared resources" title="Asset Library" text="Upload your own khat pieces. Search across all teachers' uploads. Not restricted by your assigned scripts." />
       <div className="asset-upload-form">
         <label className="field-label">Title<input className="field" placeholder="e.g. Alif in six weights" /></label>
         <label className="field-label">Khat type
@@ -207,7 +244,7 @@ export function TeacherProfile() {
         <div>
           <p className="eyebrow">Teacher profile</p>
           <h1>Ustadh Ismail Khatri</h1>
-          <p>Nairobi · Naskh specialist · Joined Jan 2025</p>
+          <p>Nairobi · Assigned scripts: {currentTeacher.assignedScripts.map(s => khatTypes[s].name).join(', ')} · Joined Jan 2025</p>
         </div>
       </div>
       <div className="profile-stats">
@@ -226,6 +263,65 @@ export function TeacherProfile() {
       </div>
       <div className="activity-card">
         <SectionHeading title="Site activity" />
+        <ActivityHeatmap />
+      </div>
+    </main>
+  );
+}
+
+export function RestrictedStudentProfile() {
+  const student = students[0];
+  return (
+    <main className="page portal-page">
+      <BackLink to="queue" label="Back to Review Queue" />
+      <div className="profile-hero">
+        <div className="profile-avatar">{student.name.split(' ').map(n => n[0]).join('')}</div>
+        <div>
+          <p className="eyebrow">Student profile · practice & activity view</p>
+          <h1>{student.name}</h1>
+          <p>{student.branch} · {student.tr} · {student.script}</p>
+        </div>
+      </div>
+      <div className="info-banner"><Eye size={16} /><span>You are viewing this student's practice and activity data. Contact details and student-only actions (like sharing to showcase) are not shown. This view is available for any student across any branch — entries can be diverted across branches.</span></div>
+      <div className="profile-stats">
+        <StatCard icon={Clock} value="48h 20m" label="Total practice time" trend="+3h this month" />
+        <StatCard icon={Award} value="2" label="Certificates earned" />
+        <StatCard icon={Trophy} value="1" label="Competition win" />
+      </div>
+      <SectionHeading title="Practice uploads" text="Every regular level upload — browseable, not just a count. Judge how much and how well the student has practiced." />
+      <div className="practice-upload-grid">
+        {student.practiceUploads.map(upload => (
+          <div className="practice-upload-tile" key={upload.id}>
+            <div className="practice-tile-art" style={{ color: khatTypes[upload.script].color }}>{upload.thumb}</div>
+            <div><strong>{upload.levelName}</strong><small>{khatTypes[upload.script].name} · {upload.date}</small></div>
+            <span className="practice-time"><Clock size={13} /> {upload.minutes} min</span>
+          </div>
+        ))}
+      </div>
+      <SectionHeading title="Progress per khat type" text="Separate tracks — no combined badge." />
+      <div className="profile-script-grid">
+        {scriptList.map(script => {
+          const sp = student.scriptProgress[script];
+          if (!sp.enrolled) return null;
+          return (
+            <div className="profile-script" key={script} style={{ '--script': khatTypes[script].color } as React.CSSProperties}>
+              <div className="profile-script-head">
+                <strong>{khatTypes[script].arabic}</strong>
+                <div>
+                  <h3>{khatTypes[script].name}</h3>
+                  <span>{sp.level} · {sp.progress}%</span>
+                </div>
+                <BadgeIcon script={script} tier={sp.tier} />
+              </div>
+              <div className="progress"><i style={{ width: `${sp.progress}%`, background: khatTypes[script].color }} /></div>
+              <div className="profile-subsection"><small>Certificate</small><span>{sp.certificate || 'In progress · no certificate yet'}</span></div>
+              <div className="profile-subsection"><small>Time spent</small><span>{sp.timeSpent}</span></div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="activity-card">
+        <SectionHeading title="Practice rhythm" />
         <ActivityHeatmap />
       </div>
     </main>
@@ -268,7 +364,7 @@ export function CompetitionJudging() {
 }
 
 export function HostEvent() {
-  const [events, setEvents] = useState(liveEvents.filter(e => e.host.includes('Ismail')));
+  const [events] = useState(liveEvents.filter(e => e.host.includes('Ismail')));
   const [scheduled, setScheduled] = useState(false);
   return (
     <main className="page portal-page">
@@ -344,18 +440,54 @@ export function BranchTeachers() {
         <div>
           <p className="eyebrow">Branch coordinator · Nairobi</p>
           <h1>Branch Teacher Overview</h1>
-          <p>Teachers in your branch and their activity. Load management is admin-only.</p>
+          <p>Teachers in your branch, their assigned khat types, and activity. Load management is admin-only.</p>
         </div>
       </div>
       <div className="teacher-table">
-        <div className="table-head"><span>Teacher</span><span>Script</span><span>Entries reviewed</span><span>Students</span><span>Coordinator</span></div>
+        <div className="table-head"><span>Teacher</span><span>Assigned scripts</span><span>Entries reviewed</span><span>Students</span><span>Profile</span></div>
         {branchTeachers.map(t => (
           <div className="history-row" key={t.name}>
-            <span><strong>{t.name}</strong></span>
-            <span>{khatTypes[scriptList.find(s => t.name.includes('Naskh') ? s === 'Naskh' : s === 'Nastaaleeq') || 'Naskh'].name}</span>
+            <span><strong>{t.name}</strong>{t.isCoordinator && <StatusChip tone="blue">Coord</StatusChip>}</span>
+            <span>
+              <div className="script-toggle-group">
+                {t.assignedScripts.map(s => <span key={s} className="script-toggle-chip active" style={{ '--script': khatTypes[s].color } as React.CSSProperties}>{khatTypes[s].name}</span>)}
+              </div>
+            </span>
             <span>{t.entriesReviewed}</span>
             <span>{t.students}</span>
-            <span>{t.isCoordinator ? <StatusChip tone="blue">Yes</StatusChip> : '—'}</span>
+            <Button outline onClick={() => navigate('teacher-profile-view')}>View profile</Button>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
+}
+
+export function BranchStudents() {
+  const branchStudents = students.filter(s => s.branch === 'Nairobi');
+  return (
+    <main className="page portal-page">
+      <div className="portal-welcome">
+        <div>
+          <p className="eyebrow">Branch coordinator · Nairobi</p>
+          <h1>Branch Student Overview</h1>
+          <p>Students in your branch, their progress and practice activity. Open any student's restricted profile for practice detail.</p>
+        </div>
+      </div>
+      <div className="teacher-table">
+        <div className="table-head"><span>Student</span><span>TR</span><span>Script(s)</span><span>Progress</span><span>Last practice</span><span>Profile</span></div>
+        {branchStudents.map(s => (
+          <div className="history-row" key={s.tr}>
+            <span><strong>{s.name}</strong></span>
+            <span>{s.tr}</span>
+            <span>
+              {scriptList.filter(sc => s.scriptProgress[sc].enrolled).map(sc => (
+                <span key={sc} className="script-tag" style={{ color: khatTypes[sc].color }}>{khatTypes[sc].name}</span>
+              ))}
+            </span>
+            <span>{s.progress}%</span>
+            <span>{s.lastPractice}</span>
+            <Button outline onClick={() => navigate('student-profile')}>View profile</Button>
           </div>
         ))}
       </div>

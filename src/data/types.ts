@@ -10,3 +10,15 @@ export type KhatType = {
   desc: string;
   tagline: string;
 };
+
+export type LevelType = 'practice' | 'checkpoint';
+
+export type CourseLevel = {
+  id: number;
+  name: string;
+  type: LevelType;
+  exercises?: number;
+  locked?: boolean;
+  complete?: boolean;
+  current?: boolean;
+};

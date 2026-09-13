@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import {
   ArrowRight, Award, BarChart3, BookOpen, CalendarDays, Check, ChevronRight,
-  ClipboardList, FileText, LayoutDashboard, Lock, LogOut, Menu, Play, Plus, Search,
-  Settings, ShieldCheck, Sparkles, Trash2, Trophy, Upload, Users, X,
+  ClipboardList, FileText, FileImage, FileVideo, LayoutDashboard, Lock, LogOut, Menu,
+  Play, Plus, Search, Settings, ShieldCheck, Sparkles, Trash2, Trophy, Upload, Users,
 } from 'lucide-react';
-import type { Script } from '@/data/types';
+import type { Script, LevelType } from '@/data/types';
 import {
   khatTypes, scriptList, branches, teachers, entryLogs, galleryWorks,
-  books, competitions, liveEvents, students,
+  books, competitions, liveEvents, students, courseLevels,
 } from '@/data/mock';
+import type { Teacher } from '@/data/mock';
 import {
   navigate, Button, SectionHeading, StatusChip, StatCard, ScriptTabs,
-  Modal, ShowcaseSections,
+  Modal, ShowcaseSections, UploadBox,
 } from '@/components/ui';
 
 export function AdminLayout({ page }: { page: string }) {
@@ -105,6 +106,47 @@ function AdminOverview() {
 function CourseBuilder() {
   const [script, setScript] = useState<Script>('Naskh');
   const [courseType, setCourseType] = useState<'certification' | 'secondary'>('certification');
+  const [selectedLevel, setSelectedLevel] = useState(3);
+  const [showAddLevel, setShowAddLevel] = useState(false);
+  const [newLevelType, setNewLevelType] = useState<LevelType>('practice');
+  const [levels, setLevels] = useState(courseLevels);
+  const [mediaRefs, setMediaRefs] = useState<{ name: string | null; type: 'video' | 'image' }[]>([
+    { name: 'naskh-level03-demo.mp4', type: 'video' },
+    { name: 'naskh-mufradat-03-ref.jpg', type: 'image' },
+  ]);
+  const [sheetFiles, setSheetFiles] = useState<{ size: string; name: string | null }[]>([
+    { size: '1mm', name: 'naskh-03-1mm.pdf' },
+    { size: '2mm', name: 'naskh-03-2mm.pdf' },
+    { size: '3mm', name: null },
+  ]);
+  const [checkpointRefs, setCheckpointRefs] = useState<{ name: string | null }[]>([
+    { name: 'checkpoint-foundation-letters.jpg' },
+  ]);
+
+  const level = levels[selectedLevel - 1];
+  const isCheckpoint = level?.type === 'checkpoint';
+
+  const addMediaRef = (type: 'video' | 'image') => {
+    setMediaRefs([...mediaRefs, { name: null, type }]);
+  };
+
+  const addLevel = () => {
+    const newId = levels.length + 1;
+    const newLvl = {
+      id: newId,
+      name: newLevelType === 'checkpoint' ? `Checkpoint · New` : `New practice level`,
+      type: newLevelType,
+      exercises: newLevelType === 'practice' ? 24 : undefined,
+      locked: false,
+    };
+    setLevels([...levels, newLvl]);
+    setSelectedLevel(newId);
+    setShowAddLevel(false);
+    setMediaRefs([]);
+    setSheetFiles([{ size: '1mm', name: null }, { size: '2mm', name: null }, { size: '3mm', name: null }]);
+    setCheckpointRefs([]);
+  };
+
   return (
     <>
       <SectionHeading eyebrow="Curriculum control" title="Course Builder" text="Shape the levels, references, and practice sheets for every hand." />
@@ -120,25 +162,99 @@ function CourseBuilder() {
       )}
       <div className="builder-grid">
         <div className="builder-levels">
-          {['The round letters', 'Tall and angular letters', 'Mufradāt set one', 'Mufradāt set two', 'Checkpoint · Foundation', 'Joining at the baseline'].map((x, i) => (
-            <button className={i === 2 ? 'active' : ''} key={x}>
-              <span>⠿</span><strong>Level {i + 1}</strong><small>{x}</small><ChevronRight size={15} />
+          {levels.map((l, i) => (
+            <button className={selectedLevel === l.id ? 'active' : ''} key={l.id} onClick={() => setSelectedLevel(l.id)}>
+              <span>{l.type === 'checkpoint' ? '◆' : '⠿'}</span>
+              <strong>Level {l.id}</strong>
+              <small>{l.name}{l.type === 'checkpoint' ? ' · Checkpoint test' : l.exercises ? ` · ${l.exercises} exercises` : ''}</small>
+              <ChevronRight size={15} />
             </button>
           ))}
-          <button className="add-level-btn"><Plus size={16} /> Add level</button>
-          {courseType === 'secondary' && <button className="delete-course-btn"><Trash2 size={15} /> Delete course</button>}
+          <button className="add-level-btn" onClick={() => setShowAddLevel(true)}><Plus size={16} /> Add level</button>
+          {courseType === 'secondary' && levels.length > 0 && <button className="delete-course-btn"><Trash2 size={15} /> Delete course</button>}
         </div>
         <div className="builder-editor">
-          <div className="editor-heading">
-            <div><p className="eyebrow">Editing level 03</p><h2>Mufradāt set one</h2></div>
-            <StatusChip tone="green">Published</StatusChip>
-          </div>
-          <label className="field-label">Level title<input className="field" defaultValue="Mufradāt set one" /></label>
-          <label className="field-label">Video reference URL<input className="field" defaultValue="https://studio.example/reference/naskh-03" /></label>
-          <label className="field-label">Image reference URL<input className="field" defaultValue="naskh-mufradat-03.jpg" /></label>
-          <div className="editor-upload"><Upload size={18} /><span>Practice sheets</span><button>1mm</button><button>2mm</button><button>3mm</button></div>
-          {courseType === 'secondary' && <label className="field-label">Finishing certificate<select className="field"><option>None</option><option>Qalam care certificate</option></select></label>}
-          <Button>Save changes <Check size={15} /></Button>
+          {showAddLevel ? (
+            <>
+              <div className="editor-heading">
+                <div><p className="eyebrow">New level</p><h2>Choose level type</h2></div>
+              </div>
+              <div className="level-type-choice">
+                <button className={newLevelType === 'practice' ? 'active' : ''} onClick={() => setNewLevelType('practice')}>
+                  <BookOpen size={20} />
+                  <strong>Practice level</strong>
+                  <small>Video/image references + practice sheets. Unlocks next level immediately on upload.</small>
+                </button>
+                <button className={newLevelType === 'checkpoint' ? 'active' : ''} onClick={() => setNewLevelType('checkpoint')}>
+                  <ClipboardList size={20} />
+                  <strong>Checkpoint test</strong>
+                  <small>Reference images of exact letters/text to copy. Teacher-reviewed. Gates progression.</small>
+                </button>
+              </div>
+              <Button onClick={addLevel}>Create {newLevelType === 'checkpoint' ? 'checkpoint test' : 'practice level'} <ArrowRight size={15} /></Button>
+            </>
+          ) : isCheckpoint ? (
+            <>
+              <div className="editor-heading">
+                <div><p className="eyebrow">Editing level {String(level.id).padStart(2, '0')}</p><h2>{level.name}</h2></div>
+                <StatusChip tone="green">Published</StatusChip>
+              </div>
+              <label className="field-label">Level title<input className="field" defaultValue={level.name} /></label>
+              <div className="editor-section">
+                <p className="eyebrow">Reference images — exact letters/text to copy</p>
+                <p className="editor-hint">Upload images of the exact letters and text the student must replicate. No typed text — the student copies precisely what is in the image.</p>
+                {checkpointRefs.map((ref, i) => (
+                  <div className="file-upload-row" key={i}>
+                    <UploadBox label={ref.name ?? 'Upload reference image'} sublabel="Image of letters/text to copy" icon={FileImage} />
+                    {checkpointRefs.length > 1 && <button className="text-link danger" onClick={() => setCheckpointRefs(checkpointRefs.filter((_, idx) => idx !== i))}><Trash2 size={14} /></button>}
+                  </div>
+                ))}
+                <button className="text-link" onClick={() => setCheckpointRefs([...checkpointRefs, { name: null as string | null }])}><Plus size={15} /> Add another reference image</button>
+              </div>
+              <div className="editor-section">
+                <p className="eyebrow">Practice sheets — one file per grid size</p>
+                <div className="sheet-upload-row">
+                  {sheetFiles.map((sf, i) => (
+                    <UploadBox key={sf.size} label={sf.name ?? `${sf.size} grid sheet`} sublabel={`Upload ${sf.size} sheet file`} />
+                  ))}
+                </div>
+              </div>
+              {courseType === 'secondary' && <label className="field-label">Finishing certificate<select className="field"><option>None</option><option>Qalam care certificate</option></select></label>}
+              <Button>Save changes <Check size={15} /></Button>
+            </>
+          ) : (
+            <>
+              <div className="editor-heading">
+                <div><p className="eyebrow">Editing level {String(level.id).padStart(2, '0')}</p><h2>{level.name}</h2></div>
+                <StatusChip tone="green">Published</StatusChip>
+              </div>
+              <label className="field-label">Level title<input className="field" defaultValue={level.name} /></label>
+              <div className="editor-section">
+                <p className="eyebrow">Reference media — uploaded files</p>
+                <p className="editor-hint">Upload video and image references. Each file is a real upload — no pasted URLs.</p>
+                {mediaRefs.map((ref, i) => (
+                  <div className="file-upload-row" key={i}>
+                    <UploadBox label={ref.name ?? `Upload ${ref.type} reference`} sublabel={ref.type === 'video' ? 'Video file (MP4, MOV)' : 'Image file (JPG, PNG)'} icon={ref.type === 'video' ? FileVideo : FileImage} />
+                    {mediaRefs.length > 1 && <button className="text-link danger" onClick={() => setMediaRefs(mediaRefs.filter((_, idx) => idx !== i))}><Trash2 size={14} /></button>}
+                  </div>
+                ))}
+                <div className="add-media-row">
+                  <button className="text-link" onClick={() => addMediaRef('video')}><Plus size={15} /> Add video reference</button>
+                  <button className="text-link" onClick={() => addMediaRef('image')}><Plus size={15} /> Add image reference</button>
+                </div>
+              </div>
+              <div className="editor-section">
+                <p className="eyebrow">Practice sheets — one file per grid size</p>
+                <div className="sheet-upload-row">
+                  {sheetFiles.map((sf, i) => (
+                    <UploadBox key={sf.size} label={sf.name ?? `${sf.size} grid sheet`} sublabel={`Upload ${sf.size} sheet file`} />
+                  ))}
+                </div>
+              </div>
+              {courseType === 'secondary' && <label className="field-label">Finishing certificate<select className="field"><option>None</option><option>Qalam care certificate</option></select></label>}
+              <Button>Save changes <Check size={15} /></Button>
+            </>
+          )}
         </div>
       </div>
     </>
@@ -147,27 +263,56 @@ function CourseBuilder() {
 
 function TeacherLoadManagement() {
   const [showOverflow, setShowOverflow] = useState(false);
+  const [teacherScripts, setTeacherScripts] = useState<Record<string, Script[]>>(() =>
+    Object.fromEntries(teachers.map(t => [t.name, [...t.assignedScripts]]))
+  );
+
+  const toggleScript = (teacherName: string, script: Script) => {
+    setTeacherScripts(prev => {
+      const current = prev[teacherName] ?? [];
+      const next = current.includes(script)
+        ? current.filter(s => s !== script)
+        : [...current, script];
+      return { ...prev, [teacherName]: next };
+    });
+  };
+
   return (
     <>
-      <SectionHeading eyebrow="People & capacity" title="Teacher & Load Management" text="Balance the queue across every branch without losing the human hand." />
+      <SectionHeading eyebrow="People & capacity" title="Teacher & Load Management" text="Assign khat types, balance the queue, and divert overflow — all from one place." />
       <div className="stats-grid">
         <StatCard icon={Users} value="28" label="Active teachers" />
         <StatCard icon={ClipboardList} value="84%" label="Avg. capacity used" />
         <StatCard icon={Award} value="6" label="Overflow entries" />
       </div>
+      <div className="info-banner"><Check size={16} /><span>Teachers only receive entries matching their assigned khat type(s). Admin manual override can assign any entry to any teacher — this is logged and unrestricted.</span></div>
       <div className="teacher-table">
-        <div className="table-head"><span>Teacher</span><span>Branch</span><span>Current load</span><span>Threshold</span><span>Action</span></div>
-        {teachers.map((t, i) => (
+        <div className="table-head"><span>Teacher</span><span>Branch</span><span>Assigned khat types</span><span>Current load</span><span>Threshold</span><span>Action</span></div>
+        {teachers.map((t) => (
           <div className="history-row" key={t.name}>
             <span><strong>{t.name}</strong>{t.isCoordinator && <StatusChip tone="blue">Coord</StatusChip>}</span>
             <span>{t.branch}</span>
+            <span>
+              <div className="script-toggle-group">
+                {scriptList.map(s => (
+                  <button
+                    key={s}
+                    className={`script-toggle-chip ${(teacherScripts[t.name] ?? []).includes(s) ? 'active' : ''}`}
+                    style={{ '--script': khatTypes[s].color } as React.CSSProperties}
+                    onClick={() => toggleScript(t.name, s)}
+                  >
+                    {khatTypes[s].name}
+                  </button>
+                ))}
+              </div>
+            </span>
             <span><div className="tiny-progress"><i style={{ width: `${(t.load / t.threshold) * 100}%` }} /></div>{t.load}/{t.threshold} entries</span>
             <span><input className="inline-input" defaultValue={t.threshold} /></span>
             <Button outline>Assign</Button>
           </div>
         ))}
       </div>
-      <SectionHeading title="Overflow / pending queue" text="Entries with no available teacher under threshold. Admin can manually assign to any teacher — even at or above threshold." action={<Button outline onClick={() => setShowOverflow(!showOverflow)}>{showOverflow ? 'Hide' : 'Show'} overflow</Button>} />
+      <SectionHeading title="Overflow / pending queue" text="Entries with no available teacher under threshold. Admin can manually assign to any teacher — even at or above threshold, and regardless of khat-type assignment." action={<Button outline onClick={() => setShowOverflow(!showOverflow)}>{showOverflow ? 'Hide' : 'Show'} overflow</Button>} />
       {showOverflow && (
         <div className="teacher-table">
           <div className="table-head"><span>Entry ID</span><span>Student</span><span>Script</span><span>Branch</span><span>Assign to</span></div>
@@ -367,16 +512,19 @@ function GovernanceManager() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   return (
     <>
-      <SectionHeading eyebrow="Certificates & Data Governance" title="Certificate/Badge Manager + Data Governance" text="Upload templates, define badge tiers, and manage user data with full admin control." />
+      <SectionHeading eyebrow="Certificates & Data Governance" title="Certificate/Badge Manager + Data Governance" text="Upload templates, define badge tiers per khat type, and manage user data with full admin control." />
       <div className="admin-dashboard-grid">
         <div className="admin-form-card">
-          <h3>Certificate templates</h3>
-          <label className="field-label">Khat type<select className="field">{scriptList.map(s => <option key={s}>{khatTypes[s].name}</option>)}</select></label>
-          <label className="field-label">Template file<input className="field" type="file" /></label>
-          <Button>Upload template <Upload size={15} /></Button>
+          <h3>Certificate templates — per khat type</h3>
+          {scriptList.map(s => (
+            <div className="badge-tier-row" key={s}>
+              <strong>{khatTypes[s].name}</strong>
+              <UploadBox label="Upload certificate template" sublabel="PDF or image file" />
+            </div>
+          ))}
         </div>
         <div className="admin-form-card">
-          <h3>Badge tiers per khat type</h3>
+          <h3>Badge tiers — per khat type</h3>
           {scriptList.map(s => (
             <div className="badge-tier-row" key={s}>
               <strong>{khatTypes[s].name}</strong>
@@ -384,9 +532,10 @@ function GovernanceManager() {
               <button className="text-link">Edit</button>
             </div>
           ))}
+          <p className="editor-hint">Badges and certificates are tracked per khat type, separately. A student learning all three scripts has three independent proficiency tiers — there is no combined "overall" badge.</p>
         </div>
       </div>
-      <SectionHeading title="Data governance" text="View, export, or permanently delete any user's data. No self-service deletion for students/teachers — admin-only." />
+      <SectionHeading title="Data governance" text="View, export, or permanently delete any user's data. No self-service deletion for students or teachers — admin-only." />
       <div className="teacher-table">
         <div className="table-head"><span>Name</span><span>Role</span><span>Branch</span><span>TR</span><span>Actions</span></div>
         {students.map(s => (

@@ -1,13 +1,14 @@
 import { useState, type ChangeEvent } from 'react';
 import {
-  ArrowRight, Award, Bell, BookOpen, CalendarDays, Check, ChevronRight,
-  FileImage, FileText, Flame, Heart, Lock, Play, Search, Sparkles, Trophy, Upload, X,
+  ArrowRight, Award, Bell, BookOpen, Check, ChevronRight,
+  ClipboardList, FileImage, FileText, Flame, Lock, Play, Search, Sparkles, Trophy, Upload, X,
+  Clock, Download,
 } from 'lucide-react';
 import type { Script } from '@/data/types';
 import {
-  branches, khatTypes, scriptList, levelNames, secondaryCourses,
+  branches, khatTypes, scriptList, courseLevels, secondaryCourses,
   encouragementQuotes, books, studentNotifications, liveEvents,
-  pastCompetitionWinners, competitions, galleryWorks,
+  pastCompetitionWinners, competitions, galleryWorks, students,
 } from '@/data/mock';
 import {
   navigate, Button, SectionHeading, StatusChip, BadgeIcon, ActivityHeatmap,
@@ -52,7 +53,7 @@ export function StudentDashboard() {
     <main className="page portal-page">
       <div className="portal-welcome">
         <div>
-          <p className="eyebrow">Tuesday, 10 September 2026 · Nairobi</p>
+          <p className="eyebrow">Saturday, 13 September 2026 · Nairobi</p>
           <h1>Your Path</h1>
           <p>Good morning, Amina. Keep your hand warm — even five minutes counts.</p>
         </div>
@@ -75,8 +76,8 @@ export function StudentDashboard() {
                   <div className="progress"><i style={{ width: `${progress}%`, background: khatTypes[script].color }} /></div>
                   <small className="next">Next: joining ب and ت</small>
                   <div className="card-actions">
-                    <Button onClick={() => navigate('level')}>Continue <ArrowRight size={14} /></Button>
-                    <Button outline onClick={() => navigate('level')}>Submit practice</Button>
+                    <Button onClick={() => navigate('course')}>Continue <ArrowRight size={14} /></Button>
+                    <Button outline onClick={() => navigate('course')}>Submit practice</Button>
                   </div>
                 </>
               ) : (
@@ -91,17 +92,17 @@ export function StudentDashboard() {
       </div>
       <div className="dashboard-lower">
         <div className="submission-card">
-          <p className="eyebrow">Your last submission</p>
+          <p className="eyebrow">Your last checkpoint test</p>
           <div className="submission-title">
             <div>
-              <h3>Naskh · Murakkabāt, exercise 4</h3>
-              <p>Sent to a Nairobi reviewer · response expected by Thu, 12 Sep</p>
+              <h3>Naskh · Foundation checkpoint</h3>
+              <p>Sent to a Nairobi reviewer · response expected by Thu, 15 Sep</p>
             </div>
             <StatusChip tone="amber">Pending review</StatusChip>
           </div>
         </div>
         <div className="badge-panel">
-          <p className="eyebrow">Your badges</p>
+          <p className="eyebrow">Your badges — per khat type</p>
           <div className="badge-row">
             <BadgeIcon script="Naskh" tier="Composition" />
             <BadgeIcon script="Sulus" tier="Foundation" />
@@ -137,27 +138,28 @@ export function Catalog() {
         <div>
           <p className="eyebrow">Certification course</p>
           <h2>{khatTypes[script].name} · The complete hand</h2>
-          <p>10 levels, writing-text levels after every 2, checkpoint tests after every 5. Teacher-reviewed path toward Ijāzah.</p>
+          <p>10 levels, checkpoint tests after every 5. Regular practice levels unlock immediately on upload — only checkpoint tests are teacher-reviewed.</p>
         </div>
         <StatusChip>62% complete</StatusChip>
       </div>
       <div className="level-list">
-        {Array.from({ length: 10 }, (_, i) => {
-          const isCheckpoint = i === 4 || i === 8;
-          const isWriting = i === 1 || i === 3 || i === 5 || i === 7;
-          const locked = i > 5;
-          return (
-            <button className={`level-row ${locked ? 'locked' : ''} ${isCheckpoint ? 'is-checkpoint' : ''} ${isWriting ? 'is-writing' : ''}`} onClick={() => !locked && (isCheckpoint ? navigate('checkpoint') : navigate('level'))} key={i}>
-              <span className="level-number">{String(i + 1).padStart(2, '0')}</span>
-              <div>
-                <strong>{levelNames[i]}</strong>
-                <small>{isCheckpoint ? 'Checkpoint test · teacher reviewed' : isWriting ? 'Writing text · 12 exercises' : 'Mufradāt · 24 exercises'}</small>
-              </div>
-              <span>{locked ? <Lock size={16} /> : isCheckpoint ? <StatusChip tone="amber">Test</StatusChip> : i === 5 ? '62%' : <Check size={16} />}</span>
-              <ChevronRight size={16} />
-            </button>
-          );
-        })}
+        {courseLevels.map((level, i) => (
+          <button
+            className={`level-row ${level.locked ? 'locked' : ''} ${level.type === 'checkpoint' ? 'is-checkpoint' : ''} ${level.current ? 'is-current' : ''}`}
+            onClick={() => !level.locked && navigate('course')}
+            key={level.id}
+          >
+            <span className="level-number">{String(level.id).padStart(2, '0')}</span>
+            <div>
+              <strong>{level.name}</strong>
+              <small>{level.type === 'checkpoint' ? 'Checkpoint test · teacher reviewed' : level.exercises ? `${level.exercises} exercises · instant unlock` : 'Practice level'}</small>
+            </div>
+            <span>
+              {level.locked ? <Lock size={16} /> : level.type === 'checkpoint' ? <StatusChip tone="amber">Test</StatusChip> : level.complete ? <Check size={16} /> : level.current ? '62%' : ''}
+            </span>
+            <ChevronRight size={16} />
+          </button>
+        ))}
       </div>
       <SectionHeading eyebrow="Open once enrolled" title="Secondary & self-learning" text="Explore technique, history, and composition without locks." />
       <div className="secondary-grid">
@@ -174,110 +176,135 @@ export function Catalog() {
   );
 }
 
-export function LevelPage() {
+export function CourseEnvironment() {
+  const [selectedLevel, setSelectedLevel] = useState(6);
   const [file, setFile] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [sheet, setSheet] = useState('2mm');
   const [quote] = useState(() => encouragementQuotes[Math.floor(Math.random() * encouragementQuotes.length)]);
   const onFile = (e: ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0]?.name ?? null);
-  return (
-    <main className="page portal-page">
-      <BackLink to="catalog" label="Back to curriculum" />
-      <div className="level-heading">
-        <div>
-          <p className="eyebrow">Naskh · Level 06</p>
-          <h1>Joining at the baseline</h1>
-          <p>Practice the soft join between bā, tā, and thā with a steady five-dot measure.</p>
-        </div>
-        <StatusChip tone="green">In progress</StatusChip>
-      </div>
-      <div className="lesson-grid">
-        <div className="video-card">
-          <div className="video-placeholder"><Play size={27} /><span>Reference video · 04:32</span></div>
-          <h3>Watch the stroke</h3>
-          <p>Ustadh Ismail demonstrates the connection slowly, then at reading speed.</p>
-        </div>
-        <div className="reference-card">
-          <p className="eyebrow">Image reference</p>
-          <div className="reference-art">بتث</div>
-          <span>Murakkabāt · joining practice</span>
-        </div>
-      </div>
-      <div className="practice-panel">
-        <SectionHeading eyebrow="Make it yours" title="Submit your practice" text="A clear photo in natural light is best. Your teacher will see the time you spent and the sheet together." />
-        <div className="practice-form">
-          <label className="field-label">Minutes practiced<input className="field" type="number" placeholder="e.g. 25" /></label>
-          <UploadBox label={file ? file : 'Drop your practice sheet here'} sublabel={file ? 'Ready to submit' : 'PNG, JPG up to 10 MB · tap to browse'} />
-        </div>
-        <div className="practice-actions">
-          <button className="text-link" onClick={() => alert(`Practice sheet preview · ${sheet} grid`)}><FileText size={16} /> Print practice sheet</button>
-          <select className="field compact" value={sheet} onChange={e => setSheet(e.target.value)}>
-            <option>1mm grid</option><option>2mm grid</option><option>3mm grid</option>
-          </select>
-          <Button onClick={() => setSubmitted(true)}>{submitted ? 'Submitted' : 'Submit for review'} <ArrowRight size={15} /></Button>
-        </div>
-      </div>
-      {submitted && (
-        <Modal onClose={() => { setSubmitted(false); navigate('dashboard'); }}>
-          <Sparkles size={30} className="gold-icon" />
-          <p className="eyebrow">A note for your desk</p>
-          <h2>"{quote}"</h2>
-          <p>Your practice is on its way to a Nairobi reviewer. Keep the page nearby and come back tomorrow.</p>
-          <Button onClick={() => { setSubmitted(false); navigate('dashboard'); }}>Back to Your Path</Button>
-        </Modal>
-      )}
-    </main>
-  );
-}
 
-export function CheckpointPage() {
-  const [file, setFile] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const level = courseLevels.find(l => l.id === selectedLevel)!;
+  const isCheckpoint = level.type === 'checkpoint';
+
   return (
-    <main className="page portal-page">
-      <BackLink to="catalog" label="Back to curriculum" />
-      <div className="level-heading">
-        <div>
-          <p className="eyebrow">Naskh · Checkpoint · Foundation</p>
-          <h1>Checkpoint Test</h1>
-          <p>Write the letters you've learned (alif, bā, tā, thā, jeem, ḥā, khā) and the provided text below. Upload a clear photo.</p>
+    <div className="course-env">
+      <aside className="course-env-sidebar">
+        <div className="course-env-header">
+          <p className="eyebrow">Naskh · Certification</p>
+          <h3>The complete hand</h3>
         </div>
-        <StatusChip tone="amber">Test · Teacher reviewed</StatusChip>
-      </div>
-      <div className="checkpoint-letters">
-        <p className="eyebrow">Letters to write</p>
-        <div className="checkpoint-letter-row">ا ب ت ث ج ح خ</div>
-        <p className="eyebrow" style={{ marginTop: 18 }}>Provided text</p>
-        <div className="checkpoint-text">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
-      </div>
-      <div className="practice-panel">
-        <SectionHeading eyebrow="Submit your test" title="Upload your checkpoint sheet" text="This will be sent to a teacher for review. You'll be notified when the result is ready." />
-        <UploadBox tall label={file || 'Upload your test sheet'} sublabel={file ? 'Ready to submit' : 'PNG, JPG up to 10 MB'} />
-        <div className="practice-actions">
-          <Button onClick={() => setSubmitted(true)}>{submitted ? 'Submitted' : 'Submit for review'} <ArrowRight size={15} /></Button>
+        <div className="course-env-levels">
+          {courseLevels.map(l => (
+            <button
+              key={l.id}
+              className={`course-env-level ${selectedLevel === l.id ? 'active' : ''} ${l.locked ? 'locked' : ''} ${l.type === 'checkpoint' ? 'is-checkpoint' : ''}`}
+              onClick={() => !l.locked && setSelectedLevel(l.id)}
+            >
+              <span className="level-icon">
+                {l.locked ? <Lock size={14} /> : l.type === 'checkpoint' ? <ClipboardList size={14} /> : l.complete ? <Check size={14} /> : l.current ? <Play size={14} /> : <span className="level-num">{l.id}</span>}
+              </span>
+              <div>
+                <strong>Level {l.id}</strong>
+                <small>{l.name}</small>
+              </div>
+            </button>
+          ))}
         </div>
-      </div>
-      {submitted && (
-        <div className="submission-result-card">
-          <Check size={24} className="green-icon" />
-          <div>
-            <h3>Sent to a Nairobi reviewer</h3>
-            <p>Response expected by Thu, 12 Sep. Your next levels will unlock once you pass. If a redo is needed, you'll re-attempt with the same letters and text.</p>
+        <button className="course-env-exit" onClick={() => navigate('catalog')}><X size={16} /> Exit course</button>
+      </aside>
+      <main className="course-env-main">
+        <div className="course-env-content">
+          <div className="level-heading">
+            <div>
+              <p className="eyebrow">Naskh · Level {String(level.id).padStart(2, '0')}</p>
+              <h1>{level.name}</h1>
+              <p>{isCheckpoint ? 'Checkpoint test — teacher reviewed. Upload a clear photo of your completed sheet.' : 'Practice the strokes at your own pace. Uploading your practice immediately unlocks the next level.'}</p>
+            </div>
+            <StatusChip tone={isCheckpoint ? 'amber' : 'green'}>{isCheckpoint ? 'Test · Teacher reviewed' : 'Practice · Instant unlock'}</StatusChip>
           </div>
-          <StatusChip tone="amber">Pending review</StatusChip>
+
+          {isCheckpoint ? (
+            <>
+              <div className="checkpoint-ref-section">
+                <p className="eyebrow">Reference images — copy precisely</p>
+                <p className="editor-hint">Replicate exactly what you see in the reference images. Your upload will be sent to a teacher for review.</p>
+                <div className="checkpoint-ref-grid">
+                  <div className="checkpoint-ref-image"><span>ا ب ت ث ج ح خ</span></div>
+                  <div className="checkpoint-ref-image"><span>بِسْمِ اللَّهِ</span></div>
+                </div>
+              </div>
+              <div className="practice-panel">
+                <SectionHeading eyebrow="Submit your test" title="Upload your checkpoint sheet" text="This will be sent to a teacher for review. You'll be notified when the result is ready. If a redo is needed, you'll re-attempt with the same letters and text." />
+                <UploadBox tall label={file || 'Upload your test sheet'} sublabel={file ? 'Ready to submit' : 'PNG, JPG up to 10 MB'} />
+                <div className="practice-actions">
+                  <Button onClick={() => setSaved(true)}>{saved ? 'Submitted' : 'Submit for review'} <ArrowRight size={15} /></Button>
+                </div>
+              </div>
+              {saved && (
+                <div className="submission-result-card">
+                  <Check size={24} className="green-icon" />
+                  <div>
+                    <h3>Sent to a reviewer</h3>
+                    <p>Response expected by Thu, 15 Sep. Your next levels will unlock once you pass. If a redo is needed, you'll re-attempt with the same letters and text, submitted as a new entry.</p>
+                  </div>
+                  <StatusChip tone="amber">Pending review</StatusChip>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="lesson-grid">
+                <div className="video-card">
+                  <div className="video-placeholder"><Play size={27} /><span>Reference video · 04:32</span></div>
+                  <h3>Watch the stroke</h3>
+                  <p>Ustadh Ismail demonstrates the connection slowly, then at reading speed.</p>
+                </div>
+                <div className="reference-card">
+                  <p className="eyebrow">Image reference</p>
+                  <div className="reference-art">بتث</div>
+                  <span>Murakkabāt · joining practice</span>
+                </div>
+              </div>
+              <div className="practice-panel">
+                <SectionHeading eyebrow="Make it yours" title="Submit your practice" text="A clear photo in natural light is best. Your practice is saved to your profile and the next level unlocks immediately — no review needed." />
+                <div className="practice-form">
+                  <label className="field-label">Minutes practiced<input className="field" type="number" placeholder="e.g. 25" /></label>
+                  <UploadBox label={file || 'Drop your practice sheet here'} sublabel={file ? 'Ready to save' : 'PNG, JPG up to 10 MB · tap to browse'} />
+                </div>
+                <div className="practice-actions">
+                  <button className="text-link" onClick={() => alert(`Practice sheet · ${sheet} grid`)}><FileText size={16} /> Download {sheet} practice sheet</button>
+                  <select className="field compact" value={sheet} onChange={e => setSheet(e.target.value)}>
+                    <option>1mm grid</option><option>2mm grid</option><option>3mm grid</option>
+                  </select>
+                  <Button onClick={() => setSaved(true)}>{saved ? 'Saved' : 'Save practice'} <ArrowRight size={15} /></Button>
+                </div>
+              </div>
+              {saved && (
+                <Modal onClose={() => { setSaved(false); setSelectedLevel(Math.min(selectedLevel + 1, courseLevels.length)); }}>
+                  <Sparkles size={30} className="gold-icon" />
+                  <p className="eyebrow">A note for your desk</p>
+                  <h2>"{quote}"</h2>
+                  <p>Practice saved — next level unlocked. Your upload is on your profile for your teacher to see, but it's never queued for review.</p>
+                  <Button onClick={() => { setSaved(false); setSelectedLevel(Math.min(selectedLevel + 1, courseLevels.length)); }}>Continue to Level {Math.min(selectedLevel + 1, courseLevels.length)}</Button>
+                </Modal>
+              )}
+            </>
+          )}
         </div>
-      )}
-    </main>
+      </main>
+    </div>
   );
 }
 
 export function Profile() {
+  const student = students[0];
   return (
     <main className="page portal-page">
       <div className="profile-hero">
         <div className="profile-avatar">AS</div>
         <div>
-          <p className="eyebrow">Student profile</p>
+          <p className="eyebrow">Student profile · your full view</p>
           <h1>Amina Suleiman</h1>
           <p>Nairobi · TR-20481 · Joined March 2026</p>
         </div>
@@ -288,23 +315,37 @@ export function Profile() {
         <StatCard icon={Award} value="2" label="Certificates earned" />
         <StatCard icon={Trophy} value="1" label="Competition win" />
       </div>
-      <SectionHeading title="Your three hands" text="Progress and achievements, separated by script." />
+      <SectionHeading title="Your three hands" text="Progress and achievements, tracked separately per script — no combined badge." />
       <div className="profile-script-grid">
-        {scriptList.map(script => (
-          <div className="profile-script" key={script} style={{ '--script': khatTypes[script].color } as React.CSSProperties}>
-            <div className="profile-script-head">
-              <strong>{khatTypes[script].arabic}</strong>
-              <div>
-                <h3>{khatTypes[script].name}</h3>
-                <span>{script === 'Naskh' ? 'Composition · 62%' : script === 'Sulus' ? 'Foundation · 20%' : 'Not enrolled'}</span>
+        {scriptList.map(script => {
+          const sp = student.scriptProgress[script];
+          if (!sp.enrolled) return null;
+          return (
+            <div className="profile-script" key={script} style={{ '--script': khatTypes[script].color } as React.CSSProperties}>
+              <div className="profile-script-head">
+                <strong>{khatTypes[script].arabic}</strong>
+                <div>
+                  <h3>{khatTypes[script].name}</h3>
+                  <span>{sp.level} · {sp.progress}%</span>
+                </div>
+                <BadgeIcon script={script} tier={sp.tier} />
               </div>
-              <BadgeIcon script={script} tier={script === 'Naskh' ? 'Composition' : 'Foundation'} />
+              <div className="progress"><i style={{ width: `${sp.progress}%`, background: khatTypes[script].color }} /></div>
+              <div className="profile-subsection"><small>Certification</small><span>{sp.certificate || 'In progress · no certificate yet'}</span></div>
+              <div className="profile-subsection"><small>Self-learning</small><span>Qalam care & cutting · 34%</span></div>
+              <div className="profile-subsection"><small>Event-based</small><span>Naskh clinic · 3 entries</span></div>
+              <div className="profile-subsection"><small>Time spent</small><span>{sp.timeSpent}</span></div>
             </div>
-            <div className="progress"><i style={{ width: script === 'Naskh' ? '62%' : script === 'Sulus' ? '20%' : '0%', background: khatTypes[script].color }} /></div>
-            <div className="profile-subsection"><small>Certification</small><span>{script === 'Naskh' ? 'Foundation certificate · issued 24 Aug 2026' : 'In progress · no certificate yet'}</span></div>
-            <div className="profile-subsection"><small>Self-learning</small><span>Qalam care & cutting · 34%</span></div>
-            <div className="profile-subsection"><small>Event-based</small><span>Naskh clinic · 3 entries</span></div>
-            <div className="profile-subsection"><small>Time spent</small><span>{script === 'Naskh' ? '28h 15m' : script === 'Sulus' ? '12h 40m' : '—'}</span></div>
+          );
+        })}
+      </div>
+      <SectionHeading title="Your practice uploads" text="Every regular level upload, saved here for your reference and visible to your teachers." />
+      <div className="practice-upload-grid">
+        {student.practiceUploads.map(upload => (
+          <div className="practice-upload-tile" key={upload.id}>
+            <div className="practice-tile-art" style={{ color: khatTypes[upload.script].color }}>{upload.thumb}</div>
+            <div><strong>{upload.levelName}</strong><small>{khatTypes[upload.script].name} · {upload.date}</small></div>
+            <span className="practice-time"><Clock size={13} /> {upload.minutes} min</span>
           </div>
         ))}
       </div>

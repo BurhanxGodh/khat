@@ -26,3 +26,69 @@
 .landing-panel-brand{display:flex;flex-direction:column;align-items:center;gap:16px}.landing-panel-brand .logo{min-width:0;color:#fff;justify-content:center}.landing-panel-brand .logo strong{color:#fff}.landing-panel-brand .logo small{color:#d9e0f7}.landing-seal{width:92px;height:92px;border:2px solid #f1af05;border-radius:50%;display:grid;place-items:center;color:#f1af05;font-family:serif;font-size:32px;box-shadow:0 0 0 8px rgba(241,175,5,.12)}
 .landing-panel-kicker{margin:28px 0 10px;color:#f1af05;text-transform:uppercase;letter-spacing:.18em;font-size:10px;font-weight:800}.landing-panel h1{max-width:380px;color:#fff;font-size:clamp(28px,3vw,48px);line-height:1.12;margin:0}.landing-panel-copy{color:#dbe3fb;margin:16px 0 30px}.reference-role-card{display:grid;grid-template-columns:48px 1fr 16px;align-items:center;gap:14px;width:100%;max-width:360px;padding:12px 8px;border:0;border-top:1px solid rgba(255,255,255,.16);color:#fff;text-align:left;background:transparent;transition:.2s}.reference-role-card:last-child{border-bottom:1px solid rgba(255,255,255,.16)}.reference-role-card:hover{background:rgba(255,255,255,.08);padding-left:16px}.reference-role-icon{width:42px;height:42px;border:2px solid #f1af05;border-radius:50%;display:grid;place-items:center;color:#f1af05;font-size:20px}.reference-role-label{font-family:'Libre Baskerville',serif;font-size:15px}.landing-panel-note{display:flex;align-items:center;gap:8px;color:#cbd7f5;font-size:11px;line-height:1.5;max-width:360px;margin-top:26px}.header-icon-button{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--muted);background:transparent}.header-icon-button:hover{color:var(--gold);border-color:var(--gold)}.dashboard-list-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--line)}.dashboard-list-row div{display:grid;gap:5px}.dashboard-list-row small{color:var(--muted)}.settings-page{min-height:calc(100vh - 88px);display:grid;place-items:center}.settings-card{width:min(620px,100%);padding:48px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 50px rgba(72,56,30,.08)}.settings-card h1{margin-bottom:8px}.settings-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 0;border-bottom:1px solid var(--line)}.settings-row div{display:grid;gap:5px}.settings-row small{color:var(--muted)}.settings-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:30px}
 @media(max-width:900px){.reference-landing{padding:16px;display:block}.landing-photo{min-height:42vh;border-radius:16px 16px 0 0}.landing-panel{min-height:auto;border-radius:0 0 16px 16px;padding:42px 24px}.main-nav{display:none}.topbar{padding:0 20px}.header-actions .role-switcher{display:none}}
+
+/* Section 1: Script toggle chips for teacher khat-type assignment */
+.script-toggle-group{display:flex;flex-wrap:wrap;gap:6px}
+.script-toggle-chip{border:1px solid var(--line);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;color:var(--muted);background:var(--card);transition:.2s}
+.script-toggle-chip.active{background:var(--script);color:#fff;border-color:var(--script)}
+.script-toggle-chip:hover{border-color:var(--script)}
+.script-tag{font-size:11px;font-weight:700;margin-right:6px}
+
+/* Section 2: Practice upload tiles for restricted student profile */
+.practice-upload-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:36px}
+.practice-upload-tile{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.practice-tile-art{height:80px;background:#f0eadb;border-radius:4px;display:flex;align-items:center;justify-content:center;font:36px serif;direction:rtl}
+.practice-upload-tile strong{font-size:12px}
+.practice-upload-tile small{font-size:10px;color:var(--muted)}
+.practice-time{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--gold);font-weight:700}
+
+/* Section 4: Review page additions */
+.review-result{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:5px;background:var(--card)}
+.review-result p{font-size:12px;margin-top:8px}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state h3{font-size:18px;margin:14px 0 8px}
+.empty-state p{font-size:13px}
+
+/* Section 5: Course builder new elements */
+.editor-section{border-top:1px solid var(--line);padding-top:20px;margin-top:20px}
+.editor-hint{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.file-upload-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.file-upload-row .upload-box{flex:1}
+.add-media-row{display:flex;gap:18px;margin-top:8px}
+.sheet-upload-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.level-type-choice{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.level-type-choice button{border:1px solid var(--line);border-radius:6px;padding:20px;text-align:left;background:var(--card);display:flex;flex-direction:column;gap:8px;transition:.2s}
+.level-type-choice button.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(170,120,31,.12)}
+.level-type-choice button:hover{border-color:var(--gold)}
+.level-type-choice strong{font-family:'Libre Baskerville',serif;font-size:15px}
+.level-type-choice small{font-size:11px;color:var(--muted);line-height:1.5}
+
+/* Section 7: Immersive course environment */
+.course-env{display:grid;grid-template-columns:280px 1fr;min-height:100vh;background:var(--cream)}
+.course-env-sidebar{background:#2c241e;color:#eadcc4;padding:24px 16px;display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;width:280px;overflow-y:auto}
+.course-env-header{padding:0 8px 20px;border-bottom:1px solid #4c3e31;margin-bottom:12px}
+.course-env-header h3{color:#fff;font-size:16px;margin-top:4px}
+.course-env-header .eyebrow{color:#a99572;margin-bottom:4px}
+.course-env-levels{flex:1;display:flex;flex-direction:column;gap:4px}
+.course-env-level{display:flex;align-items:center;gap:10px;text-align:left;width:100%;padding:10px 8px;border-radius:4px;color:#c9bda9;transition:.2s}
+.course-env-level:hover{background:#46382a}
+.course-env-level.active{background:#46382a;color:#f1c86c}
+.course-env-level.locked{opacity:.4;cursor:not-allowed}
+.course-env-level.is-checkpoint .level-icon{color:var(--gold)}
+.level-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex:none}
+.level-num{font-size:11px;font-weight:700;color:var(--muted)}
+.course-env-level strong{font-size:11px;display:block}
+.course-env-level small{font-size:11px;color:#a99572;display:block}
+.course-env-exit{margin-top:16px;padding:10px 12px;border-top:1px solid #4c3e31;display:flex;align-items:center;gap:8px;color:#c9bda9;font-weight:700;font-size:13px;width:100%;text-align:left}
+.course-env-exit:hover{color:#f1c86c}
+.course-env-main{margin-left:280px;padding:48px 56px;max-width:900px;width:calc(100% - 280px)}
+.course-env-content{max-width:680px}
+
+/* Checkpoint reference images in course env */
+.checkpoint-ref-section{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:24px;margin-bottom:20px}
+.checkpoint-ref-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.checkpoint-ref-image{height:160px;background:#f0eadb;border-radius:5px;display:flex;align-items:center;justify-content:center;font:42px serif;direction:rtl;color:var(--ink)}
+
+/* Responsive course env */
+@media(max-width:900px){.course-env{grid-template-columns:1fr}.course-env-sidebar{position:static;width:100%;max-height:300px;overflow-y:auto}.course-env-main{margin-left:0;width:100%;padding:32px 20px}.checkpoint-ref-grid{grid-template-columns:1fr}.practice-upload-grid{grid-template-columns:repeat(2,1fr)}.level-type-choice{grid-template-columns:1fr}.sheet-upload-row{grid-template-columns:1fr}}
+@media(max-width:600px){.practice-upload-grid{grid-template-columns:1fr}}

@@ -5,13 +5,13 @@ import { useHash, Header, navigate } from '@/components/ui';
 import { Gallery } from '@/pages/public';
 import { LandingRoleSelect, Auth, ForcedPasswordChange, SettingsPage } from '@/pages/auth';
 import {
-  StudentLandingPage, StudentDashboard, Catalog, LevelPage, CheckpointPage, Profile,
+  StudentLandingPage, StudentDashboard, Catalog, CourseEnvironment, Profile,
   ShowcaseSubmission, Competitions, StudentEvents, Resources, Notifications,
 } from '@/pages/student';
 import {
   TeacherDashboard, CoordinatorDashboard, TeacherQueue, ReviewPage, Reviews, TeacherShowcase, AssetLibrary,
   TeacherProfile, CompetitionJudging, HostEvent, BranchStats, BranchTeachers,
-  TeacherNotifications,
+  BranchStudents, TeacherNotifications, RestrictedStudentProfile,
 } from '@/pages/teacher';
 import { AdminLayout } from '@/pages/admin';
 
@@ -19,17 +19,17 @@ function App() {
   const page = useHash();
   const [role, setRole] = useState<Role>(() => {
     if (page.startsWith('admin')) return 'admin';
-    if (page.startsWith('queue') || page.startsWith('review') || page === 'reviews' || page === 'assets' || page === 'judging' || page === 'events-host' || page === 'branch-stats' || page === 'branch-teachers') return 'teacher';
+    if (page.startsWith('queue') || page.startsWith('review') || page === 'reviews' || page === 'assets' || page === 'judging' || page === 'events-host' || page === 'branch-stats' || page === 'branch-teachers' || page === 'branch-students') return 'teacher';
     if (['landing', 'signup', 'login', 'forced-password'].includes(page)) return 'student';
     return 'student';
   });
 
   useEffect(() => {
     if (page.startsWith('admin')) setRole('admin');
-    else if (page.startsWith('coordinator-') || ['branch-stats', 'branch-teachers'].includes(page)) setRole('coordinator');
-    else if (page.startsWith('teacher-') || ['queue', 'review', 'reviews', 'assets', 'judging', 'events-host'].includes(page)) setRole('teacher');
+    else if (page.startsWith('coordinator-') || ['branch-stats', 'branch-teachers', 'branch-students'].includes(page)) setRole('coordinator');
+    else if (page.startsWith('teacher-') || ['queue', 'review', 'reviews', 'assets', 'judging', 'events-host', 'student-profile', 'teacher-profile-view'].includes(page)) setRole('teacher');
     else if (page.startsWith('login-')) setRole(page.replace('login-', '') as Role);
-    else if (page === 'dashboard' || page === 'student' || page === 'student-landing') setRole('student');
+    else if (page === 'dashboard' || page === 'student' || page === 'student-landing' || page === 'catalog' || page === 'course' || page === 'showcase' || page === 'competitions' || page === 'events' || page === 'resources' || page === 'profile' || page === 'notifications') setRole('student');
   }, [page]);
 
   const content = (() => {
@@ -48,10 +48,8 @@ function App() {
     // Student portal
     if (page === 'dashboard' || page === 'student') return <StudentDashboard />;
     if (page === 'catalog') return <Catalog />;
-    if (page === 'level') return <LevelPage />;
-    if (page === 'checkpoint') return <CheckpointPage />;
+    if (page === 'course') return <CourseEnvironment />;
     if (page === 'profile' && role === 'student') return <Profile />;
-    if (page === 'student-profile') return <Profile />;
     if (page === 'showcase' && role === 'student') return <ShowcaseSubmission />;
     if (page === 'competitions' && role === 'student') return <Competitions />;
     if (page === 'events' && role === 'student') return <StudentEvents />;
@@ -73,10 +71,12 @@ function App() {
     if (page === 'events-host') return <HostEvent />;
     if (page === 'profile' && (role === 'teacher' || role === 'coordinator')) return <TeacherProfile />;
     if (page === 'notifications' && (role === 'teacher' || role === 'coordinator')) return <TeacherNotifications />;
+    if (page === 'student-profile') return <RestrictedStudentProfile />;
 
     // Coordinator extra tabs
     if (page === 'branch-stats') return <BranchStats />;
     if (page === 'branch-teachers') return <BranchTeachers />;
+    if (page === 'branch-students') return <BranchStudents />;
 
     // Admin portal
     if (page === 'admin' || page.startsWith('admin-')) return <AdminLayout page={page} />;
@@ -85,7 +85,7 @@ function App() {
   })();
 
   if (role === 'admin' && (page === 'admin' || page.startsWith('admin-'))) return <>{content}</>;
-  if (page === 'landing' || page === 'signup' || page === 'login' || page.startsWith('login-') || page === 'forced-password' || page === 'settings') return <>{content}</>;
+  if (page === 'landing' || page === 'signup' || page === 'login' || page.startsWith('login-') || page === 'forced-password' || page === 'settings' || page === 'course') return <>{content}</>;
 
   return (
     <>

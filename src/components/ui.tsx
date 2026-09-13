@@ -42,7 +42,7 @@ export function Header({ role, setRole }: { role: Role; setRole: (r: Role) => vo
   const links: Record<Role, [string, string][]> = {
     student: [['dashboard', 'Dashboard'], ['catalog', 'Courses'], ['gallery', 'Gallery'], ['competitions', 'Competitions'], ['events', 'Events'], ['resources', 'Resources'], ['profile', 'Profile'], ['notifications', 'Alerts']],
     teacher: [['teacher-dashboard', 'Dashboard'], ['queue', 'Review Queue'], ['reviews', 'My Reviews'], ['showcase', 'Showcase'], ['assets', 'Asset Library'], ['judging', 'Judging'], ['events-host', 'Host Event'], ['profile', 'Profile'], ['notifications', 'Alerts']],
-    coordinator: [['coordinator-dashboard', 'Dashboard'], ['queue', 'Review Queue'], ['reviews', 'My Reviews'], ['branch-stats', 'Branch Stats'], ['branch-teachers', 'Branch Teachers'], ['showcase', 'Showcase'], ['assets', 'Asset Library'], ['profile', 'Profile'], ['notifications', 'Alerts']],
+    coordinator: [['coordinator-dashboard', 'Dashboard'], ['queue', 'Review Queue'], ['reviews', 'My Reviews'], ['branch-stats', 'Branch Stats'], ['branch-teachers', 'Branch Teachers'], ['branch-students', 'Branch Students'], ['showcase', 'Showcase'], ['assets', 'Asset Library'], ['profile', 'Profile'], ['notifications', 'Alerts']],
     admin: [['admin', 'Overview'], ['admin-courses', 'Course Builder'], ['admin-users', 'Teacher & Load'], ['admin-logs', 'Entry Logs'], ['admin-showcase', 'Showcase Mod'], ['admin-competitions', 'Competitions'], ['admin-events', 'Events'], ['admin-resources', 'Resources'], ['admin-stats', 'Statistics'], ['admin-governance', 'Certificates & Data']],
   };
   const nav = links[role];
