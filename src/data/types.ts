@@ -22,3 +22,14 @@ export type CourseLevel = {
   complete?: boolean;
   current?: boolean;
 };
+
+export type CertificateTier = 'Foundation' | 'Composition' | 'Mastery';
+
+export type Certificate = {
+  script: Script;
+  tier: CertificateTier;
+  earned: boolean;
+  date?: string;
+  levelRequired: number;
+};
+

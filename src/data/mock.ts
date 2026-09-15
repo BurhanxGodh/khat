@@ -1,4 +1,4 @@
-import type { Script, Role, KhatType, CourseLevel } from './types';
+import type { Script, Role, KhatType, CourseLevel, Certificate } from './types';
 
 export const branches = ['Nairobi', 'Karachi', 'Surat', 'Sidhpur', 'Marol / Mumbai'] as const;
 export type Branch = (typeof branches)[number];
@@ -215,6 +215,24 @@ export const courseLevels: CourseLevel[] = [
 ];
 
 export const levelNames = courseLevels.map(l => l.name);
+
+export const certificateTiers: { tier: 'Foundation' | 'Composition' | 'Mastery'; levelRequired: number; desc: string }[] = [
+  { tier: 'Foundation', levelRequired: 5, desc: 'Awarded after passing the Foundation checkpoint (Level 5).' },
+  { tier: 'Composition', levelRequired: 9, desc: 'Awarded after passing the Composition checkpoint (Level 9).' },
+  { tier: 'Mastery', levelRequired: 10, desc: 'Awarded after completing the final level — the complete hand.' },
+];
+
+export const studentCertificates: Certificate[] = [
+  { script: 'Naskh', tier: 'Foundation', earned: true, date: '24 Aug 2026', levelRequired: 5 },
+  { script: 'Naskh', tier: 'Composition', earned: false, levelRequired: 9 },
+  { script: 'Naskh', tier: 'Mastery', earned: false, levelRequired: 10 },
+  { script: 'Sulus', tier: 'Foundation', earned: false, levelRequired: 5 },
+  { script: 'Sulus', tier: 'Composition', earned: false, levelRequired: 9 },
+  { script: 'Sulus', tier: 'Mastery', earned: false, levelRequired: 10 },
+  { script: 'Nastaaleeq', tier: 'Foundation', earned: false, levelRequired: 5 },
+  { script: 'Nastaaleeq', tier: 'Composition', earned: false, levelRequired: 9 },
+  { script: 'Nastaaleeq', tier: 'Mastery', earned: false, levelRequired: 10 },
+];
 
 export const secondaryCourses = [
   { title: 'Qalam care & cutting', desc: 'A practical guide to keeping your reed in conversation with the page.', progress: 34 },

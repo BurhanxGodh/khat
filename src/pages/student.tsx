@@ -9,6 +9,7 @@ import {
   branches, khatTypes, scriptList, courseLevels, secondaryCourses,
   encouragementQuotes, books, studentNotifications, liveEvents,
   pastCompetitionWinners, competitions, galleryWorks, students,
+  studentCertificates, certificateTiers,
 } from '@/data/mock';
 import {
   navigate, Button, SectionHeading, StatusChip, BadgeIcon, ActivityHeatmap,
